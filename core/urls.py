@@ -16,8 +16,37 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+from routers import api_root, router
+from django.conf.urls.static import static
+from django.conf import settings
+
+
+from rest_framework_simplejwt.views import TokenRefreshView
+from rental_connects.views.token import EmailTokenObtainPairView
+
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
+    path('admin/', admin.site.urls),
+
+    # JWT
+    path('api/token/', EmailTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+
+    # Остальные API
+    path('api/accounts/', include("rental_connects.urls.accounts")),
+    path('api/rental/', include("rental_connects.urls.booking")),
+    path('api/reviews/', include("rental_connects.urls.review")),
+
+
+
+    # API root — СТАВИМ ПЕРЕД router
+    path('api/', api_root, name='api-root'),
+
+    # Router — САМЫЙ ПОСЛЕДНИЙ
+    path('api/', include(router.urls)),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+

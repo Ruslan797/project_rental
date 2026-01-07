@@ -10,11 +10,17 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import logging
+import logging.config
+import os
+import sys
+
 from pathlib import Path
 from environ import Env
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.insert(0, os.path.join(BASE_DIR, 'app'))
 
 
 # Quick-start development settings - unsuitable for production
@@ -22,17 +28,20 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 
-# LOGS_DIR = BASE_DIR / "logs"
-# LOGS_DIR.mkdir(exist_ok=True)
-# HTTP_LOG = LOGS_DIR / "http_logs.log"
-# DB_LOG = LOGS_DIR / "db_logs.log"
+LOGS_DIR = BASE_DIR / "logs"
+LOGS_DIR.mkdir(exist_ok=True)
+HTTP_LOG = LOGS_DIR / "http_logs.log"
+DB_LOG = LOGS_DIR / "db_logs.log"
 
 env = Env()
 env.read_env(str(BASE_DIR / '.env'))
 
 SECRET_KEY = env.str('SECRET_KEY')
-DEBUG = env.bool('DEBUG')
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS')
+# DEBUG = env.bool('DEBUG')
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
+# ALLOWED_HOSTS = env.list('ALLOWED_HOSTS')
+ALLOWED_HOSTS = ['0.0.0.0', 'localhost', '*']
+
 
 
 # Application definition
@@ -45,8 +54,12 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
 
+    "rest_framework",
+    "rest_framework_simplejwt",
+    "django_filters",
 
-    "rental.apps.RentalConfig",
+    "rental_connects.apps.RentalConnectsConfig",
+
 ]
 
 MIDDLEWARE = [
@@ -57,9 +70,11 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
 ]
 
 ROOT_URLCONF = "core.urls"
+AUTH_USER_MODEL = "rental_connects.User"
 
 TEMPLATES = [
     {
@@ -77,6 +92,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "core.wsgi.application"
+
 
 
 # Database
@@ -138,9 +154,90 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+AUTHENTICATION_BACKENDS = [
+    "rental_connects.backends.EmailBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
+
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        # "rest_framework.authentication.SessionAuthentication",
+        # "rest_framework.authentication.BasicAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticatedOrReadOnly",
+    ],
+    "DEFAULT_FILTER_BACKENDS": [
+        "django_filters.rest_framework.DjangoFilterBackend",
+        "rest_framework.filters.SearchFilter",
+        "rest_framework.filters.OrderingFilter",
+    ],
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 10,
+}
+
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=360),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ROTATE_REFRESH_TOKEN': False,
+    'BLACKLIST_AFTER_ROTATION': False,
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+    'TOKEN_CLAIM_TIPE': 'token_tipe'
+
+}
+
+
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "http_file": {
+            "class": "logging.FileHandler",
+            "filename": HTTP_LOG,
+            "formatter": "verbose",
+        },
+        "db_file": {
+            "class": "logging.FileHandler",
+            "filename": DB_LOG,
+            "formatter": "verbose",
+        },
+    },
+    "loggers": {
+        "django.request": {   # HTTP запросы
+            "handlers": ["http_file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "django.db.backends": {  # SQL запросы
+            "handlers": ["db_file"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
+    },
+}
