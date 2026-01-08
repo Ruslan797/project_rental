@@ -199,10 +199,26 @@ from rental_connects.models.booking import Advertisement, Comment, RentRequest, 
 from rental_connects.models.accounts import Tenant, Landlord
 from rental_connects.serializers.booking import AdvertisementSerializer, CommentSerializer, BookingCreateSerializer
 from rental_connects.filters import AdvertisementFilter
+from rest_framework.exceptions import ValidationError
+
+
+# class AdvertisementViewSet(viewsets.ModelViewSet):
+#     queryset = Advertisement.objects.all()
+#     serializer_class = AdvertisementSerializer
+#     permission_classes = [IsAuthenticatedOrReadOnly]
+#     filter_backends = [filters.SearchFilter, filters.OrderingFilter, django_filters.rest_framework.DjangoFilterBackend]
+#     filterset_class = AdvertisementFilter
+#     search_fields = ["title", "description", "address__city"]
+#     ordering_fields = ["price", "created_at"]
+#
+#     def perform_create(self, serializer):
+#         # ВАЖНО: в модели landlord = ForeignKey(Landlord)
+#         landlord = Landlord.objects.get(user=self.request.user)
+#         serializer.save(landlord=landlord)
 
 
 class AdvertisementViewSet(viewsets.ModelViewSet):
-    queryset = Advertisement.objects.all()
+    queryset = Advertisement.objects.all().order_by("-created_at")
     serializer_class = AdvertisementSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter, django_filters.rest_framework.DjangoFilterBackend]
@@ -211,9 +227,15 @@ class AdvertisementViewSet(viewsets.ModelViewSet):
     ordering_fields = ["price", "created_at"]
 
     def perform_create(self, serializer):
-        # ВАЖНО: в модели landlord = ForeignKey(Landlord)
-        landlord = Landlord.objects.get(user=self.request.user)
+        try:
+            landlord = Landlord.objects.get(user=self.request.user)
+        except Landlord.DoesNotExist:
+            raise ValidationError({
+                "detail": "You are not a landlord. Call /api/accounts/become_landlord/ first."
+            })
+
         serializer.save(landlord=landlord)
+
 
 
 class CommentViewSet(viewsets.ModelViewSet):

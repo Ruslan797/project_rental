@@ -4,6 +4,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import Group
+from rental_connects.models.accounts import Landlord
 
 from rental_connects.models.accounts import User
 from rental_connects.serializers.accounts import UserSerializer, RegisterSerializer, LoginSerializer
@@ -48,13 +49,34 @@ def login_view(request):
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+# @api_view(["POST"])
+# @permission_classes([IsAuthenticated])
+# def become_landlord_view(request):
+#     user = request.user
+#     landlord_group, created = Group.objects.get_or_create(name="Landlord")
+#     user.groups.add(landlord_group)
+#     return Response({"message": "Now you are a Landlord"}, status=status.HTTP_200_OK)
+
+
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def become_landlord_view(request):
     user = request.user
+
     landlord_group, _ = Group.objects.get_or_create(name="Landlord")
     user.groups.add(landlord_group)
-    return Response({"message": "Now you are a Landlord"}, status=status.HTTP_200_OK)
+
+    landlord, created = Landlord.objects.get_or_create(user=user)
+
+    return Response(
+        {
+            "message": "Now you are a Landlord",
+            "landlord_id": landlord.id,
+            "landlord_created": created
+        },
+        status=status.HTTP_200_OK
+    )
 
 
 @api_view(["GET"])
