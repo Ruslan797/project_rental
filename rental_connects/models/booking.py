@@ -190,6 +190,11 @@ class Comment(models.Model):
         related_name="comments",
         verbose_name=_("User")
     )
+    rating = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        null=True, blank=True
+    )
+
     text = models.TextField(verbose_name=_("Comment text"))
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Created at"))
     updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Updated at"))

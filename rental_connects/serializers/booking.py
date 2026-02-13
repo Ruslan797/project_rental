@@ -103,6 +103,5 @@ class BookingCreateSerializer(serializers.ModelSerializer):
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
-        # безопасно: user не даём передавать из клиента
-        fields = ["id", "advertisement", "text", "created_at", "updated_at"]
+        fields = ["id", "advertisement", "text", "rating", "created_at", "updated_at"]
         read_only_fields = ["id", "created_at", "updated_at"]

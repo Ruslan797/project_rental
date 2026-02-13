@@ -200,6 +200,8 @@ from rental_connects.models.accounts import Tenant, Landlord
 from rental_connects.serializers.booking import AdvertisementSerializer, CommentSerializer, BookingCreateSerializer
 from rental_connects.filters import AdvertisementFilter
 from rest_framework.exceptions import ValidationError
+from django.db.models import Avg
+
 
 
 # class AdvertisementViewSet(viewsets.ModelViewSet):
@@ -237,14 +239,17 @@ class AdvertisementViewSet(viewsets.ModelViewSet):
         serializer.save(landlord=landlord)
 
 
-
 class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        comment = serializer.save(user=self.request.user)
+        avg_rating = comment.advertisement.comments.exclude(rating__isnull=True).aggregate(avg=Avg("rating"))["avg"]
+
+        comment.advertisement.rating = avg_rating
+        comment.advertisement.save(update_fields=["rating"])
 
 
 @api_view(['POST'])
