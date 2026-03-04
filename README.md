@@ -1,8 +1,12 @@
-Rental Connects – Backend API
+# Rental Connects – Backend API
+
 Backend application for a housing rental system.
 This project was developed as a study project and demonstrates backend logic for advertisements, bookings, user roles, and JWT authentication.
 
-Main Features Users & Roles
+
+## Main Features 
+
+Users & Roles
 User registration and authentication
 JWT authentication (access / refresh tokens)
 User roles:
@@ -26,7 +30,10 @@ View busy dates for an advertisement
 Comments
 Add comments to advertisements
 View comments for advertisements
-Technologies
+
+
+## Technologies
+
 Python 3.13
 Django
 Django REST Framework
