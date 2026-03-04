@@ -42,4 +42,38 @@ JWT (SimpleJWT)
 Docker & Docker Compose
 
 
+## How to run the project
+
+1. Clone the repository
+
+git clone https://github.com/Ruslan797/project_rental.git
+
+2. Go to the project directory
+
+cd project_rental
+
+3. Create virtual environment
+
+python -m venv venv
+
+4. Activate virtual environment
+
+Windows:
+venv\Scripts\activate
+
+Linux / Mac:
+source venv/bin/activate
+
+5. Install dependencies
+
+pip install -r requirements.txt
+
+6. Run migrations
+
+python manage.py migrate
+
+7. Start the server
+
+python manage.py runserver
+
 
