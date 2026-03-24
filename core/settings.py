@@ -229,12 +229,12 @@ LOGGING = {
         },
     },
     "loggers": {
-        "django.request": {   # HTTP запросы
+        "django.request": {   # HTTP
             "handlers": ["http_file"],
             "level": "INFO",
             "propagate": False,
         },
-        "django.db.backends": {  # SQL запросы
+        "django.db.backends": {  # SQL
             "handlers": ["db_file"],
             "level": "DEBUG",
             "propagate": False,
